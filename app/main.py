@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import auth
+from .routers import auth, personal
 from .db.database import engine
 from .db.models import Base
 
@@ -12,6 +12,12 @@ app.include_router(
     auth.router,
     prefix='/auth',
     tags=['auth']
+)
+
+app.include_router(
+    personal.router,
+    prefix='/personal',
+    tags=['personal']
 )
 
 @app.get('/')

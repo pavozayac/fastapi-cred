@@ -20,7 +20,7 @@ def Database():
 
 def Authenticated(Authentication: Optional[str] = Header(None), db: Session = Depends(Database)):
     if Authentication is None:
-        raise HTTPException(401)
+        raise HTTPException(401, 'Bruh')
     
     try:
         payload = jwt.decode(Authentication, SECRET_KEY, algorithms=['HS256'])

@@ -1,14 +1,16 @@
 from fastapi.exceptions import HTTPException
 from passlib.utils.decor import deprecated_function
+from sqlalchemy import schema
 from sqlalchemy.orm.session import Session
 from fastapi import APIRouter, Depends
 from ..schemas import User, UserIn, TokenResponse, LoginSchema
 from ..db import models
-from ..dependencies import Database
+from ..dependencies import Database, Authenticated
 from passlib.context import CryptContext
 from ..settings import SECRET_KEY
 import datetime
 from jose import jwt
+import uuid
 
 router = APIRouter()
 
@@ -23,19 +25,25 @@ def create_JWT(claims: dict):
     return token
 
 
-@router.post('/register')
+@router.post('/register', response_model=User)
 def register_user(user: UserIn, db: Session = Depends(Database)):
-    dict = user.dict()
-    dict['password'] = pass_context.hash(user.password)
+    email_check = db.query(models.User).filter(models.User.email == user.email).first()
+    
+    if email_check is not None:
+        raise HTTPException(409, 'This email is already registered')
+
+    user_dict = user.dict()
+    user_dict['password'] = pass_context.hash(user.password)
+    user_dict['uuid'] = str(uuid.uuid1())
     new_user = models.User(
-        **dict
+        **user_dict
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    #return new_user
+    return new_user
 
 @router.post('/login', response_model=TokenResponse)
 def login_user(login: LoginSchema, db: Session = Depends(Database)):
@@ -56,3 +64,21 @@ def login_user(login: LoginSchema, db: Session = Depends(Database)):
         expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
     )
     
+@router.get('/user/{id}', response_model=User)
+async def get_user_by_id(id: str, db: Session = Depends(Database)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+
+    if user is None:
+        raise HTTPException(404)
+    
+    return user
+
+@router.get('/uuid')
+async def get_uuid(user: models.User = Depends(Authenticated)):
+    return {
+        'identifier': user.uuid
+    }
+
+@router.get('/current', response_model=User)
+async def get_current_user(user: models.User = Depends(Authenticated)):
+    return user

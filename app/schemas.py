@@ -81,6 +81,7 @@ class IncomeSourceIn(IncomeSourceBase):
     pass
 
 class IncomeSource(IncomeSourceBase):
+    id: int
     user_id: int
 
     class Config:
@@ -104,6 +105,7 @@ class ObligationIn(ObligationBase):
     pass
 
 class Obligation(ObligationBase):
+    id: int
     user_id: int
 
     class Config: 

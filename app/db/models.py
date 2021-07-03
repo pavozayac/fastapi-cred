@@ -20,7 +20,7 @@ class User(Base):
     uuid = Column(String, unique=True)
 
     #personal_data = relationship('PersonalData', back_populates='user')
-    income_sources = relationship('IncomeSource', back_populates='user')
+    #income_sources = relationship('IncomeSource', back_populates='user')
     obligations = relationship('Obligation', back_populates='user')
     identity_card = relationship('IdentityCard', back_populates='user')
 
@@ -60,8 +60,10 @@ class PersonalData(Base):
 class IncomeSource(Base):
     __tablename__ = 'income_sources'
 
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    user = relationship('User', back_populates='income_sources')
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', backref=backref('income_sources', uselist=True))
 
     income_type = Column(String)
     subtype = Column(String, nullable=True)
@@ -74,7 +76,9 @@ class IncomeSource(Base):
 class Obligation(Base):
     __tablename__ = 'obligations'
 
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='obligations')
 
     role_in_obligation = Column(String)

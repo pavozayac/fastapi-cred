@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from sqlalchemy.orm.session import Session
-from ..dependencies import Authenticated, Database
+from ..dependencies import Authenticated, Database, UserByUUID
 from ..schemas import PersonalData, PersonalDataIn
 from  ..db import models
 
@@ -28,6 +28,15 @@ async def post_personal_data(personal: PersonalDataIn, user: models.User = Depen
 
 @router.get('/', response_model=PersonalData)
 async def get_personal_data(user: models.User = Depends(Authenticated)):
+    retrieved = user.personal_data
+
+    if retrieved is None:
+        raise HTTPException(404, 'No personal data found')
+
+    return retrieved
+
+@router.get('/external', response_model=PersonalData)
+async def get_personal_data_by_uuid(user: models.User = Depends(UserByUUID)):
     retrieved = user.personal_data
 
     if retrieved is None:

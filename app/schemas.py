@@ -1,5 +1,6 @@
 import datetime
-from .db.database import Base
+
+import pydantic
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, validator, ValidationError
 
@@ -7,13 +8,6 @@ class UserBase(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    phone: str
-    
-    @validator('phone')
-    def validate_phone(cls, v: str):
-        if not v.isnumeric() or ' ' in v or len(v) != 9:
-            raise ValidationError('Invalid phone number')
-        return v
  
 class UserIn(UserBase):
     password: str
@@ -36,12 +30,15 @@ class TokenResponse(BaseModel):
     expires_at: datetime.datetime
 
 class PersonalDataBase(BaseModel):
+    first_names: str
+    last_name: str
     pesel: int
     nationality: str
     country_of_birth: str
     mothers_maiden_name: str
     date_of_birth: datetime.date
-    postcode: str
+    phone: str = pydantic.Field(..., example='123456789')
+    postcode: str   
     city: str
     country: str
     street: str
@@ -54,10 +51,16 @@ class PersonalDataBase(BaseModel):
     monthly_household_spendings: int
     other_burdens_spendings: int
     other_burdens_text: str
-    has_business: bool
+    has_business: bool  
     has_closed_business: bool
     years_in_workforce: int
     is_eligible_for_early_retirement: bool
+
+    @validator('phone')
+    def validate_phone(cls, v: str):
+        if not v.isnumeric() or ' ' in v or len(v) != 9:
+            raise ValidationError('Invalid phone number')
+        return v
 
 class PersonalDataIn(PersonalDataBase):
     pass
@@ -112,11 +115,15 @@ class Obligation(ObligationBase):
         orm_mode = True
 
 class IdentityCardBase(BaseModel):
-    type: str
+    series_and_number: str
+    expiration_date: datetime.date
+    issued_date: datetime.date
 
 class IdentityCardIn(IdentityCardBase):
     pass
 
 class IdentityCard(IdentityCardBase):
-    scan_path1: str
-    scan_path2: str
+    user_id: int
+
+    class Config:
+        orm_mode = True

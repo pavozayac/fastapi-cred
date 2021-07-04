@@ -1,8 +1,9 @@
+from typing import Optional
 from fastapi.exceptions import HTTPException
 from passlib.utils.decor import deprecated_function
 from sqlalchemy import schema
 from sqlalchemy.orm.session import Session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from ..schemas import User, UserIn, TokenResponse, LoginSchema
 from ..db import models
 from ..dependencies import Database, Authenticated
@@ -64,9 +65,12 @@ def login_user(login: LoginSchema, db: Session = Depends(Database)):
         expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
     )
     
-@router.get('/user/{id}', response_model=User)
-async def get_user_by_id(id: str, db: Session = Depends(Database)):
-    user = db.query(models.User).filter(models.User.id == id).first()
+@router.get('/user-by-uuid', response_model=User)
+async def get_user_by_id(uuid: Optional[str] = Header(None), db: Session = Depends(Database)):
+    if uuid is None:
+        raise HTTPException(401)
+
+    user = db.query(models.User).filter(models.User.uuid == uuid).first()
 
     if user is None:
         raise HTTPException(404)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy.orm.session import Session
-from ..dependencies import Authenticated, Database
+from ..dependencies import Authenticated, Database, UserByUUID
 from ..db import models
 from ..schemas import IncomeSource, IncomeSourceIn
 from typing import List
@@ -23,6 +23,8 @@ async def post_income_source(income: IncomeSourceIn, user: models.User = Depends
 
 @router.get('/', response_model=List[IncomeSource])
 async def get_income_source(user: models.User = Depends(Authenticated)):
-    retrieved = user.income_sources
+    return user.income_sources
 
-    return retrieved
+@router.get('/external', response_model=List[IncomeSource])
+async def get_income_source_by_uuid(user: models.User = Depends(UserByUUID)):
+    return user.income_sources

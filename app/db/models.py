@@ -1,7 +1,3 @@
-from pydantic.errors import ColorError
-from sqlalchemy.sql.elements import collate
-from sqlalchemy.sql.operators import ColumnOperators
-from sqlalchemy.sql.traversals import COMPARE_FAILED
 from .database import Base
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Date
 from sqlalchemy.orm import backref, relationship
@@ -13,16 +9,15 @@ class User(Base):
     email = Column(String, unique=True)
     first_name = Column(String)
     last_name = Column(String)
-    phone = Column(String)
     password = Column(String)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=True)
     uuid = Column(String, unique=True)
 
     #personal_data = relationship('PersonalData', back_populates='user')
-    #income_sources = relationship('IncomeSource', back_populates='user')
+    income_sources = relationship('IncomeSource', back_populates='user')
     obligations = relationship('Obligation', back_populates='user')
-    identity_card = relationship('IdentityCard', back_populates='user')
+    #identity_card = relationship('IdentityCard', back_populates='user')
 
 class PersonalData(Base):
     __tablename__ = 'personals'
@@ -30,11 +25,15 @@ class PersonalData(Base):
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     user = relationship('User', backref=backref('personal_data', uselist=False))
 
+    first_names = Column(String)
+    last_name = Column(String)
     pesel = Column(Integer)
     nationality = Column(String)
     country_of_birth = Column(String)
     mothers_maiden_name = Column(String)
     date_of_birth = Column(Date)
+    phone = Column(String)
+
 
     postcode = Column(String)
     city = Column(String)
@@ -63,7 +62,7 @@ class IncomeSource(Base):
     id = Column(Integer, primary_key=True)
 
     user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('User', backref=backref('income_sources', uselist=True))
+    user = relationship('User', back_populates='income_sources')
 
     income_type = Column(String)
     subtype = Column(String, nullable=True)
@@ -98,11 +97,11 @@ class IdentityCard(Base):
     __tablename__ = 'cards'
 
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    user = relationship('User', back_populates='identity_card')
+    user = relationship('User', backref=backref('identity_card', uselist=False))
 
-    type = Column(String)
-    scan_path1 = Column(String)
-    scan_path2 = Column(String)
+    series_and_number = Column(String, unique=True)
+    expiration_date = Column(Date)
+    issued_date = Column(Date)
 
 
     

@@ -18,7 +18,7 @@ def Database():
     finally:
         db.close()
 
-def Authenticated(Authentication: Optional[str] = Header(None), db: Session = Depends(Database)):
+def Authenticated(Authentication: Optional[str] = Header(None), db: Session = Depends(Database)) -> models.User:
     if Authentication is None:
         raise HTTPException(401, 'Bruh')
     
@@ -39,3 +39,13 @@ def Authenticated(Authentication: Optional[str] = Header(None), db: Session = De
 
     return user
 
+def UserByUUID(uuid: Optional[str] = Header(None), db: Session = Depends(Database)) -> models.User:
+    if uuid is None:
+        raise HTTPException(401)
+
+    user = db.query(models.User).filter(models.User.uuid == uuid).first()
+
+    if user is None:
+        raise HTTPException(401)
+
+    return user
